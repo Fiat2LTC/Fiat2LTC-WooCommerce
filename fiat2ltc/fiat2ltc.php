@@ -43,7 +43,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     }
 
     $formatted_price = ( $negative ? '-' : '' ) . sprintf( $price_format, '<span class="woocommerce-Price-currencySymbol">' . get_woocommerce_currency_symbol( $currency ) . '</span>', $price );
-    $return          = '<iframe width="100%" height="24" src="https://'.$lRoot.'/IFRAME/'.get_woocommerce_currency().'/'.$price.'&LITESONLY&NOTAG'.$del.'&FSIZE=WC" frameborder="0"></iframe>';
+    $return          = '<iframe width="100%" height="24" src="https://'.$lRoot.'/IFRAME/'.get_woocommerce_currency().'/'.$price.'&LITESONLY&NOTAG'.$del.'&WC&LROUND=0&FONT=OPENSANS" frameborder="0"></iframe>';
 
     if ( $ex_tax_label && wc_tax_enabled() ) {
       $return .= ' <small class="woocommerce-Price-taxLabel tax_label">' . WC()->countries->ex_tax_or_vat() . '</small>';
