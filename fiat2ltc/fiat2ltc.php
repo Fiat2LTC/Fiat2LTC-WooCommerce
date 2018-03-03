@@ -37,6 +37,11 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   add_action('wp_loaded', 'register_load_fragments_script'); 
   
+  function flCurrencyMenu($url = "/", $tag = "li", $cls = "", $lbl = "View prices in:") {
+    ( strpos($url, '?') !== false ) ? $prmSep = "&" : $prmSep = "?" ;
+    echo '<'.$tag.' class="'.$cls.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a></'.$tag.'>';
+  }
+  
   if ( ! function_exists( 'storefront_header_cart' ) ) {
     function storefront_header_cart() {
       global $wp;
@@ -49,12 +54,13 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
         }
       ?>
       <ul id="site-header-cart" class="site-header-cart menu">
-        <li class="">
-          View prices in:<br>
-          <a class="currency-switch" href="<?php echo home_url( $wp->request ); ?>?f2l_cur=LTC" title="View prices in LTC">LTC</a> :: 
-          <a class="currency-switch" href="<?php echo home_url( $wp->request ); ?>?f2l_cur=BTC" title="View prices in BTC">BTC</a> :: 
-          <a class="currency-switch" href="<?php echo home_url( $wp->request ); ?>?f2l_cur=ETH" title="View prices in ETH">ETH</a>
-        </li>
+        <?php 
+        /* 
+        ** Print currency switcher links
+        ** flCurrencyMenu( "Page URL here", "Container tag here", "Container Class here", "Label text here" )
+        */
+        echo flCurrencyMenu( home_url( $wp->request ), "li", "", "View prices in:" ); 
+        ?>
         <li class="<?php echo esc_attr( $class ); ?>">
           <?php storefront_cart_link(); ?>
         </li>
