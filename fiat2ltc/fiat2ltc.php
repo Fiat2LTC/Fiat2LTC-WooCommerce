@@ -22,6 +22,111 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     return VERSION;
   }
   
+  $flDefaults = array(
+    'denom_ltc' => '1',
+    'denom_btc' => '0',
+    'denom_eth' => '0'
+  );
+  
+  class flSettingsPage
+  {
+      private $options;
+
+      public function __construct() {
+        add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
+        add_action( 'admin_init', array( $this, 'page_init' ) );
+      }
+       public function add_plugin_page() {
+        add_options_page(
+            'Settings Admin', 
+            'Fiat2LTC Price Settings', 
+            'manage_options', 
+            'fl-setting-admin', 
+            array( $this, 'create_admin_page' )
+        );
+      }
+      public function create_admin_page() {
+        global $flDefaults;
+        // Set class property
+        //$this->options = get_option( 'fl_option' );
+        $this->options = wp_parse_args(get_option('fl_option'), $flDefaults);
+        ?>
+        <div class="wrap">
+            <h1>My Settings</h1>
+            <form method="post" action="options.php">
+            <?php
+                // This prints out all hidden setting fields
+                settings_fields( 'fl_options' );
+                do_settings_sections( 'fl-setting-admin' );
+                submit_button();
+            ?>
+            </form>
+        </div>
+        <?php
+      }
+      public function page_init() {        
+          register_setting(
+              'fl_options', // Option group
+              'fl_option', // Option name
+              array( $this, 'sanitize' ) // Sanitize
+          );
+          add_settings_section(
+              'fl_settings_denom', // ID
+              'Fiat2LTC Live Price Settings', // Title
+              array( $this, 'print_section_info' ), // Callback
+              'fl-setting-admin' // Page
+          );
+          add_settings_field(
+              'denom_ltc', 
+              'Show ŁTC in łites (/1,000)', 
+              array( $this, 'denom_ltc_callback' ), 
+              'fl-setting-admin', 
+              'fl_settings_denom'
+          ); 
+          add_settings_field(
+              'denom_btc', // ID
+              'Show ₿TC in ƀits (/1,000,000)', // Title 
+              array( $this, 'denom_btc_callback' ), // Callback
+              'fl-setting-admin', // Page
+              'fl_settings_denom' // Section           
+          );
+          add_settings_field(
+              'denom_eth', 
+              'Show ΞTH in mΞTH (/1,000)', 
+              array( $this, 'denom_eth_callback' ), 
+              'fl-setting-admin', 
+              'fl_settings_denom'
+          );      
+      }
+      public function sanitize( $input ) {
+        $new_input = array();
+        (isset( $input['denom_ltc'] ) && ( "1"==$input['denom_ltc'] )) ? $new_input['denom_ltc'] = 1 : $new_input['denom_ltc'] = 0;
+        (isset( $input['denom_btc'] ) && ( "1"==$input['denom_btc'] )) ? $new_input['denom_btc'] = 1 : $new_input['denom_btc'] = 0;
+        (isset( $input['denom_eth'] ) && ( "1"==$input['denom_eth'] )) ? $new_input['denom_eth'] = 1 : $new_input['denom_eth'] = 0;
+        return $new_input;
+      }
+      public function print_section_info() {
+          print 'Enter your settings below:';
+      }
+      public function denom_ltc_callback() {
+          printf(
+              '<input type="checkbox" id="denom_ltc" name="fl_option[denom_ltc]" value="1" '.checked( $this->options['denom_ltc'], 1, 0 ).' />',
+              isset( $this->options['denom_ltc'] ) ? esc_attr( $this->options['denom_ltc']) : '' );
+      }
+      public function denom_btc_callback() {
+          printf(
+              '<input type="checkbox" id="denom_btc" name="fl_option[denom_btc]" value="1" '.checked( $this->options['denom_btc'], 1, 0 ).' />',
+              isset( $this->options['denom_btc'] ) ? esc_attr( $this->options['denom_btc']) : '' );
+      }
+      public function denom_eth_callback() {
+          printf(
+              '<input type="checkbox" id="denom_eth" name="fl_option[denom_eth]" value="1" '.checked( $this->options['denom_eth'], 1, 0 ).' />',
+              isset( $this->options['denom_eth'] ) ? esc_attr( $this->options['denom_eth']) : '' );
+      }
+  }
+
+  if( is_admin() ) $fl_settings_page = new flSettingsPage();
+  
   function register_load_fragments_script() {
     // Register the script
 
@@ -38,7 +143,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   add_action('wp_loaded', 'register_load_fragments_script'); 
   
   function flCurrencyMenu($url = "/", $tag = "li", $cls = "", $lbl = "View prices in:") {
-    ( strpos($url, '?') !== false ) ? $prmSep = "&" : $prmSep = "?" ;
+    ( (strpos($url, '?') !== false) || (strpos($url, '&') !== false) ) ? $prmSep = "&" : $prmSep = "?" ;
     echo '<'.$tag.' class="'.$cls.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a></'.$tag.'>';
   }
   
@@ -80,6 +185,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   add_filter( 'woocommerce_format_sale_price', 'fl_wc_format_sale_price', 10, 3 );
   function fl_wc_price( $return, $price, $args = array() ) {
+    global $flDefaults;
     if (isset($_GET['f2l_cur']) && ( ($_GET['f2l_cur'] == "LTC") || ($_GET['f2l_cur'] == "ETH") || ($_GET['f2l_cur'] == "BTC") ) ) {
       $theCurrency = $_GET['f2l_cur'];
       WC()->session->set( 'F2L_Currency', $theCurrency );
@@ -112,13 +218,25 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     $price             = apply_filters( 'raw_woocommerce_price', floatval( $negative ? $price * -1 : $price ) );
     $price             = apply_filters( 'formatted_woocommerce_price', number_format( $price, $decimals, $decimal_separator, $thousand_separator ), $price, $decimals, $decimal_separator, $thousand_separator );
     $del = ( $striked_price ? "&DEL" : "" );
+    $flOptions = wp_parse_args(get_option('fl_option'), $flDefaults);
+    switch ($theCurrency) {
+      case 'BTC':
+        ($flOptions['denom_btc']) ? $denomMode = "&LITESONLY&LROUND=0" : $denomMode = "&LTCONLY&LROUND=6" ;
+        break;
+      case 'ETH':
+        ($flOptions['denom_eth']) ? $denomMode = "&LITESONLY&LROUND=0" : $denomMode = "&LTCONLY&LROUND=6" ;
+        break;
+      default:
+        ($flOptions['denom_ltc']) ? $denomMode = "&LITESONLY&LROUND=0" : $denomMode = "&LTCONLY&LROUND=6" ;
+        //$denomMode = "&LITESONLY&LROUND=0";
+    }
 
     if ( apply_filters( 'woocommerce_price_trim_zeros', false ) && $decimals > 0 ) {
       $price = wc_trim_zeros( $price );
     }
 
     $formatted_price = ( $negative ? '-' : '' ) . sprintf( $price_format, '<span class="woocommerce-Price-currencySymbol">' . get_woocommerce_currency_symbol( $currency ) . '</span>', $price );
-    $return          = '<iframe width="100%" src="https://'.$lRoot.'/IFRAME/'.$subC.get_woocommerce_currency().'/'.$price.'&LITESONLY&NOTAG'.$del.'&WC&LROUND=0&FONT=OPENSANS" frameborder="0" style="height:1.5em;"></iframe>';
+    $return          = '<iframe width="100%" src="https://'.$lRoot.'/IFRAME/'.$subC.get_woocommerce_currency().'/'.$price.$denomMode.'&NOTAG'.$del.'&WC&FONT=OPENSANS" frameborder="0" style="height:1.5em;"></iframe>';
 
     if ( $ex_tax_label && wc_tax_enabled() ) {
       $return .= ' <small class="woocommerce-Price-taxLabel tax_label">' . WC()->countries->ex_tax_or_vat() . '</small>';
