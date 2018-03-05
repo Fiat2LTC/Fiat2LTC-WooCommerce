@@ -142,45 +142,24 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   add_action('wp_loaded', 'register_load_fragments_script'); 
   
-  function flCurrencyMenu($url = "/", $tag = "li", $cls = "", $lbl = "View prices in:") {
+  function flCurrencyMenu($url = "/", $tag = "li", $cls = "", $lbl = "View prices in:", $stl = "") {
     ( (strpos($url, '?') !== false) || (strpos($url, '&') !== false) ) ? $prmSep = "&" : $prmSep = "?" ;
-    echo '<'.$tag.' class="'.$cls.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a></'.$tag.'>';
+    return '<'.$tag.' class="'.$cls.'"  style="'.$stl.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a></'.$tag.'>';
   }
   
-  if ( ! function_exists( 'storefront_header_cart' ) ) {
-    function storefront_header_cart() {
+  if ( ! function_exists( 'woocommerce_template_loop_product_link_close' ) ) {
+    /**
+     * Insert the opening anchor tag for products in the loop.
+     */
+    function woocommerce_template_loop_product_link_close() {
       global $wp;
-      
-      if ( storefront_is_woocommerce_activated() ) {
-        if ( is_cart() ) {
-          $class = 'current-menu-item';
-        } else {
-          $class = '';
-        }
-      ?>
-      <ul id="site-header-cart" class="site-header-cart menu">
-        <?php 
-        /* 
-        ** Print currency switcher links
-        ** flCurrencyMenu( "Page URL here", "Container tag here", "Container Class here", "Label text here" )
-        */
-        echo flCurrencyMenu( home_url( $wp->request ), "li", "", "View prices in:" ); 
-        ?>
-        <li class="<?php echo esc_attr( $class ); ?>">
-          <?php storefront_cart_link(); ?>
-        </li>
-        <li>
-          <?php the_widget( 'WC_Widget_Cart', 'title=' ); ?>
-        </li>
-      </ul>
-      <?php
-      }
+      echo '</a>'.flCurrencyMenu( home_url( $wp->request ), "span", "", "View prices in:",'display: block;text-align: center;margin-bottom: 8px;' );
     }
   }
   
   function fl_wc_format_sale_price( $return, $regular_price, $sale_price ) {
     //return "1__".$regular_price.$sale_price;
-    $price = '<del style="margin-left: .327em;">' . ( is_numeric( $regular_price ) ? wc_price( $regular_price, array('striked_price' => true,) ) : $regular_price ) . '</del><ins style="margin-left: .327em;">' . ( is_numeric( $sale_price ) ? wc_price( $sale_price ) : $sale_price ) . '</ins>';
+    $price = '<del style="margin-left: .327em;">' . ( is_numeric( $regular_price ) ? wc_price( $regular_price, array('sale' => true, 'striked_price' => true,) ) : $regular_price ) . '</del><ins style="margin-left: .327em;">' . ( is_numeric( $sale_price ) ? wc_price( $sale_price, array('sale' => true,) ) : $sale_price ) . '</ins>';
     return $price;
   }
   add_filter( 'woocommerce_format_sale_price', 'fl_wc_format_sale_price', 10, 3 );
@@ -210,6 +189,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       'thousand_separator' => wc_get_price_thousand_separator(),
       'decimals'           => wc_get_price_decimals(),
       'price_format'       => get_woocommerce_price_format(),
+      'sale'      => false,
       'striked_price'      => false,
     ) ) ) );
 
@@ -218,6 +198,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     $price             = apply_filters( 'raw_woocommerce_price', floatval( $negative ? $price * -1 : $price ) );
     $price             = apply_filters( 'formatted_woocommerce_price', number_format( $price, $decimals, $decimal_separator, $thousand_separator ), $price, $decimals, $decimal_separator, $thousand_separator );
     $del = ( $striked_price ? "&DEL" : "" );
+    //$currMenu = ( $sale ? "" : flCurrencyMenu( home_url( $wp->request ), "span", "", "View prices in:",'display: block;text-align: center;margin-bottom: 8px;' ) );
     $flOptions = wp_parse_args(get_option('fl_option'), $flDefaults);
     switch ($theCurrency) {
       case 'BTC':
