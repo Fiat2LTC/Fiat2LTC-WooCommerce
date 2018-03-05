@@ -201,7 +201,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       $subC = $theCurrency."/";
     }
     $lRoot = "fiat2ltc.com";
-    $lRoot = "awayfromkeyboard.co.uk/LTC";
+    //$lRoot = "awayfromkeyboard.co.uk/LTC";
     //return "[".$price."|".floatval( $negative ? $price * -1 : $price )."|".$args."|".$return."]";
     extract( apply_filters( 'wc_price_args', wp_parse_args( $args, array(
       'ex_tax_label'       => false,
