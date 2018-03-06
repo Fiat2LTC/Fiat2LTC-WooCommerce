@@ -206,7 +206,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   register_widget( 'fl_currency_widget' );
   }
   add_action( 'widgets_init', 'register_fl_currency_widget' );
-  
+  /*
   function register_load_fragments_script() {
     wp_register_script( 'load-fragments-script', plugins_url( 'fiat2ltc.js', __FILE__ ), array(), version_id(), true  );
     $translation_array = array(
@@ -216,7 +216,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 
     wp_enqueue_script( 'load-fragments-script' );
   }
-  add_action('wp_loaded', 'register_load_fragments_script'); 
+  add_action('wp_loaded', 'register_load_fragments_script'); */
   
   function flCurrencyMenu($url = "/", $tag = "li", $cls = "", $lbl = "View prices in:", $stl = "", $def = false) {
     $flOptions = wp_parse_args(get_option('fl_option'), $flDefaults);
