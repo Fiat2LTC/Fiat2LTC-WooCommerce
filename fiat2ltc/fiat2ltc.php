@@ -125,7 +125,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
           print '';
       }
       public function print_section_info_display() {
-          print 'To add the currency switchers to your template, insert this code: <pre>&lt;?php flCurrencyMenu(home_url($wp->request),"span","","View prices in:","display:block;text-align:center;"); ?&gt;</pre>';
+          print 'To add the currency switchers to your template, insert this code: <pre>&lt;?php flCurrencyMenu(home_url($wp->request),"div","cssclassgoeshere","View prices in:","cssstylegoeshere;"); ?&gt;</pre>';
       }
       public function display_showmenu_callback() {
           printf(
