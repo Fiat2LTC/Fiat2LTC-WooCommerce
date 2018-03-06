@@ -23,6 +23,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   
   $flDefaults = array(
+    'display_showmenu' => '1',
     'denom_ltc' => '1',
     'denom_btc' => '0',
     'denom_eth' => '0'
@@ -52,7 +53,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
         $this->options = wp_parse_args(get_option('fl_option'), $flDefaults);
         ?>
         <div class="wrap">
-            <h1>My Settings</h1>
+            <h1>Fiat2LTC Live Price Settings</h1>
             <form method="post" action="options.php">
             <?php
                 // This prints out all hidden setting fields
@@ -71,28 +72,41 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
               array( $this, 'sanitize' ) // Sanitize
           );
           add_settings_section(
+              'fl_settings_display', // ID
+              'Display options', // Title
+              array( $this, 'print_section_info_display' ), // Callback
+              'fl-setting-admin' // Page
+          );
+          add_settings_field(
+              'display_showmenu', 
+              'Show Currency switchers below prices', 
+              array( $this, 'display_showmenu_callback' ), 
+              'fl-setting-admin', 
+              'fl_settings_display'
+          ); 
+          add_settings_section(
               'fl_settings_denom', // ID
-              'Fiat2LTC Live Price Settings', // Title
+              'Denomination options', // Title
               array( $this, 'print_section_info' ), // Callback
               'fl-setting-admin' // Page
           );
           add_settings_field(
               'denom_ltc', 
-              'Show ŁTC in łites (/1,000)', 
+              'Show ŁTC (Ł) in łites (ł) (Ł/1,000)', 
               array( $this, 'denom_ltc_callback' ), 
               'fl-setting-admin', 
               'fl_settings_denom'
           ); 
           add_settings_field(
               'denom_btc', // ID
-              'Show ₿TC in ƀits (/1,000,000)', // Title 
+              'Show ₿TC (₿) in ƀits (ƀ) (₿/1,000,000)', // Title 
               array( $this, 'denom_btc_callback' ), // Callback
               'fl-setting-admin', // Page
               'fl_settings_denom' // Section           
           );
           add_settings_field(
               'denom_eth', 
-              'Show ΞTH in mΞTH (/1,000)', 
+              'Show ΞTH (Ξ) in milliΞTH (mΞ) (Ξ/1,000)', 
               array( $this, 'denom_eth_callback' ), 
               'fl-setting-admin', 
               'fl_settings_denom'
@@ -100,13 +114,23 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       }
       public function sanitize( $input ) {
         $new_input = array();
+        (isset( $input['display_showmenu'] ) && ( "1"==$input['display_showmenu'] )) ? $new_input['display_showmenu'] = 1 : $new_input['display_showmenu'] = 0;
         (isset( $input['denom_ltc'] ) && ( "1"==$input['denom_ltc'] )) ? $new_input['denom_ltc'] = 1 : $new_input['denom_ltc'] = 0;
         (isset( $input['denom_btc'] ) && ( "1"==$input['denom_btc'] )) ? $new_input['denom_btc'] = 1 : $new_input['denom_btc'] = 0;
         (isset( $input['denom_eth'] ) && ( "1"==$input['denom_eth'] )) ? $new_input['denom_eth'] = 1 : $new_input['denom_eth'] = 0;
         return $new_input;
       }
       public function print_section_info() {
-          print 'Enter your settings below:';
+          //print 'Enter your settings below:';
+          print '';
+      }
+      public function print_section_info_display() {
+          print 'To add the currency switchers to your template, insert this code: <pre>flCurrencyMenu(home_url($wp->request),"span","","View prices in:","display:block;text-align:center;margin-bottom:8px;")</pre>';
+      }
+      public function display_showmenu_callback() {
+          printf(
+              '<input type="checkbox" id="display_showmenu" name="fl_option[display_showmenu]" value="1" '.checked( $this->options['display_showmenu'], 1, 0 ).' />',
+              isset( $this->options['display_showmenu'] ) ? esc_attr( $this->options['display_showmenu']) : '' );
       }
       public function denom_ltc_callback() {
           printf(
@@ -142,7 +166,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   add_action('wp_loaded', 'register_load_fragments_script'); 
   
-  function flCurrencyMenu($url = "/", $tag = "li", $cls = "", $lbl = "View prices in:", $stl = "") {
+  function flCurrencyMenu($url = "/", $tag = "li", $cls = "", $lbl = "View prices in:", $stl = "", $def = false) {
+    $flOptions = wp_parse_args(get_option('fl_option'), $flDefaults);
+    if ($def && (!$flOptions['display_showmenu'])) return '';
     ( (strpos($url, '?') !== false) || (strpos($url, '&') !== false) ) ? $prmSep = "&" : $prmSep = "?" ;
     return '<'.$tag.' class="'.$cls.'"  style="'.$stl.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a></'.$tag.'>';
   }
@@ -153,7 +179,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
      */
     function woocommerce_template_loop_product_link_close() {
       global $wp;
-      echo '</a>'.flCurrencyMenu( home_url( $wp->request ), "span", "", "View prices in:",'display: block;text-align: center;margin-bottom: 8px;' );
+      echo '</a>'.flCurrencyMenu(home_url($wp->request),"span","","View prices in:","display:block;text-align:center;margin-bottom:8px;",true);
     }
   }
   
