@@ -1,8 +1,12 @@
 <?php
-
+/**
+ * @package Fiat2LTC_WooCommercePrices
+ * @version 0.1
+ */
 /*
 Plugin Name: Fiat2LTC WooCommerce Prices
 Version: 0.1
+Description: This is a plugin for WooCommerce/Wordpress to display live Litecoin (and Bitcoin/Ethereum) prices in your shop.
 */
 /*
 
@@ -20,7 +24,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   
   $flDefaults = array(
-    'display_showmenu' => '1',
+    'display_showmenu' => '0',
+    'hide_pricebtc' => '0',
+    'hide_priceeth' => '0',
     'denom_ltc' => '1',
     'denom_btc' => '0',
     'denom_eth' => '0'
@@ -72,6 +78,14 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
               'display_showmenu', 
               'Show Currency switchers below prices', 
               array( $this, 'display_showmenu_callback' ),'fl-setting-admin','fl_settings_display'); 
+          add_settings_field(
+              'hide_pricebtc', 
+              'Show ₿TC Price', 
+              array( $this, 'hide_pricebtc_callback' ),'fl-setting-admin','fl_settings_display'); 
+          add_settings_field(
+              'hide_priceeth', 
+              'Show ΞTH Price', 
+              array( $this, 'hide_priceeth_callback' ),'fl-setting-admin','fl_settings_display'); 
           add_settings_section(
               'fl_settings_denom',
               'Denomination options', 
@@ -91,6 +105,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       public function sanitize( $input ) {
         $new_input = array();
         (isset( $input['display_showmenu'] ) && ( "1"==$input['display_showmenu'] )) ? $new_input['display_showmenu'] = 1 : $new_input['display_showmenu'] = 0;
+        (isset( $input['hide_pricebtc'] )) ? $new_input['hide_pricebtc'] = 0 : $new_input['hide_pricebtc'] = 1;
+        (isset( $input['hide_priceeth'] )) ? $new_input['hide_priceeth'] = 0 : $new_input['hide_priceeth'] = 1;
         (isset( $input['denom_ltc'] ) && ( "1"==$input['denom_ltc'] )) ? $new_input['denom_ltc'] = 1 : $new_input['denom_ltc'] = 0;
         (isset( $input['denom_btc'] ) && ( "1"==$input['denom_btc'] )) ? $new_input['denom_btc'] = 1 : $new_input['denom_btc'] = 0;
         (isset( $input['denom_eth'] ) && ( "1"==$input['denom_eth'] )) ? $new_input['denom_eth'] = 1 : $new_input['denom_eth'] = 0;
@@ -104,6 +120,14 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
           printf(
               '<input type="checkbox" id="display_showmenu" name="fl_option[display_showmenu]" value="1" '.checked( $this->options['display_showmenu'], 1, 0 ).' />',
               isset( $this->options['display_showmenu'] ) ? esc_attr( $this->options['display_showmenu']) : '' );}
+      public function hide_pricebtc_callback() {
+          printf(
+              '<input type="checkbox" id="hide_pricebtc" name="fl_option[hide_pricebtc]" value="1" '.checked( $this->options['hide_pricebtc'], 0, 0 ).' />',
+              isset( $this->options['hide_pricebtc'] ) ? esc_attr( $this->options['hide_pricebtc']) : '' );}
+      public function hide_priceeth_callback() {
+          printf(
+              '<input type="checkbox" id="hide_priceeth" name="fl_option[hide_priceeth]" value="1" '.checked( $this->options['hide_priceeth'], 0, 0 ).' />',
+              isset( $this->options['hide_priceeth'] ) ? esc_attr( $this->options['hide_priceeth']) : '' );}
       public function denom_ltc_callback() {
           printf(
               '<input type="checkbox" id="denom_ltc" name="fl_option[denom_ltc]" value="1" '.checked( $this->options['denom_ltc'], 1, 0 ).' />',
@@ -198,7 +222,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     $flOptions = wp_parse_args(get_option('fl_option'), $flDefaults);
     if ($def && (!$flOptions['display_showmenu'])) return '';
     ( (strpos($url, '?') !== false) || (strpos($url, '&') !== false) ) ? $prmSep = "&" : $prmSep = "?" ;
-    $string = '<'.$tag.' class="'.$cls.'"  style="'.$stl.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a></'.$tag.'>';
+    $string = '<'.$tag.' class="'.$cls.'"  style="'.$stl.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a>';
+    if (!$flOptions['hide_pricebtc']) {
+      $string .= ' :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a>';}
+    if (!$flOptions['hide_priceeth']) {
+      $string .= ' :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a>';}
+    $string .= '</'.$tag.'>';
     if ($def) {
       return $string;
     } else {
