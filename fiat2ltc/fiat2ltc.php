@@ -10,9 +10,6 @@ Version: 0.1
 define( 'WP_DEBUG', true );
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' ); 
 
-/**
- * Check if WooCommerce is active
- **/
 if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
   define ('VERSION', '0.1');
 
@@ -48,15 +45,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       }
       public function create_admin_page() {
         global $flDefaults;
-        // Set class property
-        //$this->options = get_option( 'fl_option' );
         $this->options = wp_parse_args(get_option('fl_option'), $flDefaults);
         ?>
         <div class="wrap">
             <h1>Fiat2LTC Live Price Settings</h1>
             <form method="post" action="options.php">
             <?php
-                // This prints out all hidden setting fields
                 settings_fields( 'fl_options' );
                 do_settings_sections( 'fl-setting-admin' );
                 submit_button();
@@ -67,96 +61,130 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       }
       public function page_init() {        
           register_setting(
-              'fl_options', // Option group
-              'fl_option', // Option name
-              array( $this, 'sanitize' ) // Sanitize
-          );
+              'fl_options', 
+              'fl_option', 
+              array( $this, 'sanitize' ));
           add_settings_section(
-              'fl_settings_display', // ID
-              'Display options', // Title
-              array( $this, 'print_section_info_display' ), // Callback
-              'fl-setting-admin' // Page
-          );
+              'fl_settings_display', 
+              'Display options', 
+              array( $this, 'print_section_info_display' ),'fl-setting-admin');
           add_settings_field(
               'display_showmenu', 
               'Show Currency switchers below prices', 
-              array( $this, 'display_showmenu_callback' ), 
-              'fl-setting-admin', 
-              'fl_settings_display'
-          ); 
+              array( $this, 'display_showmenu_callback' ),'fl-setting-admin','fl_settings_display'); 
           add_settings_section(
-              'fl_settings_denom', // ID
-              'Denomination options', // Title
-              array( $this, 'print_section_info' ), // Callback
-              'fl-setting-admin' // Page
-          );
+              'fl_settings_denom',
+              'Denomination options', 
+              array( $this, 'print_section_info' ),'fl-setting-admin');
           add_settings_field(
               'denom_ltc', 
               'Show ŁTC (Ł) in łites (ł) (Ł/1,000)', 
-              array( $this, 'denom_ltc_callback' ), 
-              'fl-setting-admin', 
-              'fl_settings_denom'
-          ); 
+              array( $this, 'denom_ltc_callback' ),'fl-setting-admin','fl_settings_denom'); 
           add_settings_field(
               'denom_btc', // ID
-              'Show ₿TC (₿) in ƀits (ƀ) (₿/1,000,000)', // Title 
-              array( $this, 'denom_btc_callback' ), // Callback
-              'fl-setting-admin', // Page
-              'fl_settings_denom' // Section           
-          );
+              'Show ₿TC (₿) in ƀits (ƀ) (₿/1,000,000)',
+              array( $this, 'denom_btc_callback' ),'fl-setting-admin','fl_settings_denom');
           add_settings_field(
               'denom_eth', 
               'Show ΞTH (Ξ) in milliΞTH (mΞ) (Ξ/1,000)', 
-              array( $this, 'denom_eth_callback' ), 
-              'fl-setting-admin', 
-              'fl_settings_denom'
-          );      
-      }
+              array( $this, 'denom_eth_callback' ),'fl-setting-admin','fl_settings_denom');}
       public function sanitize( $input ) {
         $new_input = array();
         (isset( $input['display_showmenu'] ) && ( "1"==$input['display_showmenu'] )) ? $new_input['display_showmenu'] = 1 : $new_input['display_showmenu'] = 0;
         (isset( $input['denom_ltc'] ) && ( "1"==$input['denom_ltc'] )) ? $new_input['denom_ltc'] = 1 : $new_input['denom_ltc'] = 0;
         (isset( $input['denom_btc'] ) && ( "1"==$input['denom_btc'] )) ? $new_input['denom_btc'] = 1 : $new_input['denom_btc'] = 0;
         (isset( $input['denom_eth'] ) && ( "1"==$input['denom_eth'] )) ? $new_input['denom_eth'] = 1 : $new_input['denom_eth'] = 0;
-        return $new_input;
-      }
+        return $new_input;}
       public function print_section_info() {
           //print 'Enter your settings below:';
-          print '';
-      }
+          print '';}
       public function print_section_info_display() {
-          print 'To add the currency switchers to your template, insert this code: <pre>&lt;?php flCurrencyMenu(home_url($wp->request),"div","cssclassgoeshere","View prices in:","cssstylegoeshere;"); ?&gt;</pre>';
-      }
+          print 'The currency switcher is available as a widget that can be added to the sidebar, or insert this PHP code into your template: <pre>&lt;?php flCurrencyMenu(home_url($wp->request),"div","cssclassgoeshere","View prices in:","cssstylegoeshere;"); ?&gt;</pre>';}
       public function display_showmenu_callback() {
           printf(
               '<input type="checkbox" id="display_showmenu" name="fl_option[display_showmenu]" value="1" '.checked( $this->options['display_showmenu'], 1, 0 ).' />',
-              isset( $this->options['display_showmenu'] ) ? esc_attr( $this->options['display_showmenu']) : '' );
-      }
+              isset( $this->options['display_showmenu'] ) ? esc_attr( $this->options['display_showmenu']) : '' );}
       public function denom_ltc_callback() {
           printf(
               '<input type="checkbox" id="denom_ltc" name="fl_option[denom_ltc]" value="1" '.checked( $this->options['denom_ltc'], 1, 0 ).' />',
-              isset( $this->options['denom_ltc'] ) ? esc_attr( $this->options['denom_ltc']) : '' );
-      }
+              isset( $this->options['denom_ltc'] ) ? esc_attr( $this->options['denom_ltc']) : '' );}
       public function denom_btc_callback() {
           printf(
               '<input type="checkbox" id="denom_btc" name="fl_option[denom_btc]" value="1" '.checked( $this->options['denom_btc'], 1, 0 ).' />',
-              isset( $this->options['denom_btc'] ) ? esc_attr( $this->options['denom_btc']) : '' );
-      }
+              isset( $this->options['denom_btc'] ) ? esc_attr( $this->options['denom_btc']) : '' );}
       public function denom_eth_callback() {
           printf(
               '<input type="checkbox" id="denom_eth" name="fl_option[denom_eth]" value="1" '.checked( $this->options['denom_eth'], 1, 0 ).' />',
-              isset( $this->options['denom_eth'] ) ? esc_attr( $this->options['denom_eth']) : '' );
-      }
-  }
+              isset( $this->options['denom_eth'] ) ? esc_attr( $this->options['denom_eth']) : '' );}}
 
   if( is_admin() ) $fl_settings_page = new flSettingsPage();
   
+  class fl_currency_widget extends WP_Widget {
+  public function __construct() {
+    parent::__construct(
+      'fl_currency_widget',
+      __( 'Fiat2LTC Currency Switch', 'text_domain' ),
+      array(
+        'customize_selective_refresh' => true,
+      )
+    );
+  }
+  public function form( $instance ) {
+    $defaults = array(
+      'title'    => '',
+      'cssclass'    => '',
+      'text'    => 'View prices in:',
+      'cssstyle'    => '',
+    );
+    extract( wp_parse_args( ( array ) $instance, $defaults ) ); ?>
+
+    <p>
+      <label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>"><?php _e( 'Widget Title', 'text_domain' ); ?></label>
+      <input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
+    </p>
+    <p>
+      <label for="<?php echo esc_attr( $this->get_field_id( 'cssclass' ) ); ?>"><?php _e( 'CSS Class', 'text_domain' ); ?></label>
+      <input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'cssclass' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'cssclass' ) ); ?>" type="text" value="<?php echo esc_attr( $cssclass ); ?>" />
+    </p>
+    <p>
+      <label for="<?php echo esc_attr( $this->get_field_id( 'cssstyle' ) ); ?>"><?php _e( 'Element CSS Style', 'text_domain' ); ?></label>
+      <input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'cssstyle' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'cssstyle' ) ); ?>" type="text" value="<?php echo esc_attr( $cssstyle ); ?>" />
+    </p>
+    <p>
+      <label for="<?php echo esc_attr( $this->get_field_id( 'text' ) ); ?>"><?php _e( 'Display Text', 'text_domain' ); ?></label>
+      <input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'text' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'text' ) ); ?>" type="text" value="<?php echo esc_attr( $text ); ?>" />
+    </p>
+  <?php }
+  public function update( $new_instance, $old_instance ) {
+    $instance = $old_instance;
+    $instance['title']    = isset( $new_instance['title'] ) ? wp_strip_all_tags( $new_instance['title'] ) : '';
+    $instance['cssclass']    = isset( $new_instance['cssclass'] ) ? wp_strip_all_tags( $new_instance['cssclass'] ) : '';
+    $instance['text']    = isset( $new_instance['text'] ) ? wp_strip_all_tags( $new_instance['text'] ) : 'View prices in:';
+    $instance['cssstyle']    = isset( $new_instance['cssstyle'] ) ? wp_strip_all_tags( $new_instance['cssstyle'] ) : '';
+    return $instance;
+  }
+  public function widget( $args, $instance ) {
+    extract( $args );
+    global $wp;
+    $title    = isset( $instance['title'] ) ? apply_filters( 'widget_title', $instance['title'] ) : '';
+    $cssclass    = isset( $instance['cssclass'] ) ? $instance['cssclass'] : '';
+    $text    = isset( $instance['text'] ) ? $instance['text'] : 'View prices in:';
+    $cssstyle    = isset( $instance['cssstyle'] ) ? $instance['cssstyle'] : '';
+    echo $before_widget;
+    echo '<div class="widget-text wp_widget_plugin_box">';
+      if ( $title ) echo $before_title . $title . $after_title;
+      flCurrencyMenu(home_url($wp->request),"div",$cssclass,$text,$cssstyle);
+    echo '</div>';
+    echo $after_widget;
+  }
+  }
+  function register_fl_currency_widget() {
+  register_widget( 'fl_currency_widget' );
+  }
+  add_action( 'widgets_init', 'register_fl_currency_widget' );
+  
   function register_load_fragments_script() {
-    // Register the script
-
     wp_register_script( 'load-fragments-script', plugins_url( 'fiat2ltc.js', __FILE__ ), array(), version_id(), true  );
-
-    // Substitustions in script
     $translation_array = array(
         'cart_hash_key' => WC()->ajax_url() . '-wc_cart_hash'
     );
@@ -179,9 +207,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   
   if ( ! function_exists( 'woocommerce_template_loop_product_link_close' ) ) {
-    /**
-     * Insert the opening anchor tag for products in the loop.
-     */
     function woocommerce_template_loop_product_link_close() {
       global $wp;
       echo '</a>'.flCurrencyMenu(home_url($wp->request),"span","","View prices in:","display:block;text-align:center;margin-bottom:8px;",true);
@@ -189,7 +214,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   
   function fl_wc_format_sale_price( $return, $regular_price, $sale_price ) {
-    //return "1__".$regular_price.$sale_price;
     $price = '<del style="margin-left: .327em;">' . ( is_numeric( $regular_price ) ? wc_price( $regular_price, array('sale' => true, 'striked_price' => true,) ) : $regular_price ) . '</del><ins style="margin-left: .327em;">' . ( is_numeric( $sale_price ) ? wc_price( $sale_price, array('sale' => true,) ) : $sale_price ) . '</ins>';
     return $price;
   }
@@ -211,7 +235,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       $subC = $theCurrency."/";
     }
     $lRoot = "fiat2ltc.com";
-    //$lRoot = "awayfromkeyboard.co.uk/LTC";
     //return "[".$price."|".floatval( $negative ? $price * -1 : $price )."|".$args."|".$return."]";
     extract( apply_filters( 'wc_price_args', wp_parse_args( $args, array(
       'ex_tax_label'       => false,
@@ -229,7 +252,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     $price             = apply_filters( 'raw_woocommerce_price', floatval( $negative ? $price * -1 : $price ) );
     $price             = apply_filters( 'formatted_woocommerce_price', number_format( $price, $decimals, $decimal_separator, $thousand_separator ), $price, $decimals, $decimal_separator, $thousand_separator );
     $del = ( $striked_price ? "&DEL" : "" );
-    //$currMenu = ( $sale ? "" : flCurrencyMenu( home_url( $wp->request ), "span", "", "View prices in:",'display: block;text-align: center;margin-bottom: 8px;' ) );
     $flOptions = wp_parse_args(get_option('fl_option'), $flDefaults);
     switch ($theCurrency) {
       case 'BTC':
@@ -240,7 +262,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
         break;
       default:
         ($flOptions['denom_ltc']) ? $denomMode = "&LITESONLY&LROUND=0" : $denomMode = "&LTCONLY&LROUND=6" ;
-        //$denomMode = "&LITESONLY&LROUND=0";
     }
 
     if ( apply_filters( 'woocommerce_price_trim_zeros', false ) && $decimals > 0 ) {
@@ -253,17 +274,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     if ( $ex_tax_label && wc_tax_enabled() ) {
       $return .= ' <small class="woocommerce-Price-taxLabel tax_label">' . WC()->countries->ex_tax_or_vat() . '</small>';
     }
-
-    /**
-     * Filters the string of price markup.
-     *
-     * @param string $return 			Price HTML markup.
-     * @param string $price	            Formatted price.
-     * @param array  $args     			Pass on the args.
-     * @param float  $unformatted_price	Price as float to allow plugins custom formatting. Since 3.2.0.
-     */
+    
     return apply_filters( 'fl_wc_price', $return, $price, $args, $unformatted_price );
-    //return "help";
   }
   add_filter( 'wc_price', 'fl_wc_price', 10, 3 );
 
