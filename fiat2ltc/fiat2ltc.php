@@ -125,7 +125,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
           print '';
       }
       public function print_section_info_display() {
-          print 'To add the currency switchers to your template, insert this code: <pre>flCurrencyMenu(home_url($wp->request),"span","","View prices in:","display:block;text-align:center;margin-bottom:8px;")</pre>';
+          print 'To add the currency switchers to your template, insert this code: <pre>&lt;?php flCurrencyMenu(home_url($wp->request),"span","","View prices in:","display:block;text-align:center;"); ?&gt;</pre>';
       }
       public function display_showmenu_callback() {
           printf(
@@ -170,7 +170,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     $flOptions = wp_parse_args(get_option('fl_option'), $flDefaults);
     if ($def && (!$flOptions['display_showmenu'])) return '';
     ( (strpos($url, '?') !== false) || (strpos($url, '&') !== false) ) ? $prmSep = "&" : $prmSep = "?" ;
-    return '<'.$tag.' class="'.$cls.'"  style="'.$stl.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a></'.$tag.'>';
+    $string = '<'.$tag.' class="'.$cls.'"  style="'.$stl.'">'.$lbl.'<br><a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=LTC" title="View prices in LTC">LTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=BTC" title="View prices in BTC">BTC</a> :: <a class="currency-switch" href="'.$url.$prmSep.'f2l_cur=ETH" title="View prices in ETH">ETH</a></'.$tag.'>';
+    if ($def) {
+      return $string;
+    } else {
+      echo $string;
+    }
   }
   
   if ( ! function_exists( 'woocommerce_template_loop_product_link_close' ) ) {
