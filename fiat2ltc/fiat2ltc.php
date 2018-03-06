@@ -242,12 +242,27 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     }
   }
   
-  function fl_wc_format_sale_price( $return, $regular_price, $sale_price ) {
-    $price = '<del style="margin-left: .327em;">' . ( is_numeric( $regular_price ) ? wc_price( $regular_price, array('sale' => true, 'striked_price' => true,) ) : $regular_price ) . '</del><ins style="margin-left: .327em;">' . ( is_numeric( $sale_price ) ? wc_price( $sale_price, array('sale' => true,) ) : $sale_price ) . '</ins>';
+  function fl_wc_format_sale_price( $regular_price, $sale_price ) {
+    $price = '<del style="margin-left: .327em;">' . ( is_numeric( $regular_price ) ? wc_price( $regular_price, array('sale' => true, 'striked_price' => true, 'enabled' => true) ) : $regular_price ) . '</del><ins style="margin-left: .327em;">' . ( is_numeric( $sale_price ) ? wc_price( $sale_price, array('sale' => true, 'enabled' => true) ) : $sale_price ) . '</ins>';
     return $price;
   }
-  add_filter( 'woocommerce_format_sale_price', 'fl_wc_format_sale_price', 10, 3 );
-  function fl_wc_price( $return, $price, $args = array() ) {
+  
+  function fl_wc_price( $wcprice, $price, $args = array() ) {
+    extract( apply_filters( 'wc_price_args', wp_parse_args( $args, array(
+      'ex_tax_label'       => false,
+      'currency'           => '',
+      'decimal_separator'  => wc_get_price_decimal_separator(),
+      'thousand_separator' => wc_get_price_thousand_separator(),
+      'decimals'           => wc_get_price_decimals(),
+      'price_format'       => get_woocommerce_price_format(),
+      'disabled'      => false,
+      'enabled'      => false,
+      'sale'      => false,
+      'striked_price'      => false,
+    ) ) ) );
+    
+    if (!$enabled) return $wcprice;
+    
     global $flDefaults;
     if (isset($_GET['f2l_cur']) && ( ($_GET['f2l_cur'] == "LTC") || ($_GET['f2l_cur'] == "ETH") || ($_GET['f2l_cur'] == "BTC") ) ) {
       $theCurrency = $_GET['f2l_cur'];
@@ -265,16 +280,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     }
     $lRoot = "fiat2ltc.com";
     //return "[".$price."|".floatval( $negative ? $price * -1 : $price )."|".$args."|".$return."]";
-    extract( apply_filters( 'wc_price_args', wp_parse_args( $args, array(
-      'ex_tax_label'       => false,
-      'currency'           => '',
-      'decimal_separator'  => wc_get_price_decimal_separator(),
-      'thousand_separator' => wc_get_price_thousand_separator(),
-      'decimals'           => wc_get_price_decimals(),
-      'price_format'       => get_woocommerce_price_format(),
-      'sale'      => false,
-      'striked_price'      => false,
-    ) ) ) );
 
     $unformatted_price = $price;
     $negative          = $price < 0;
@@ -296,16 +301,28 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     if ( apply_filters( 'woocommerce_price_trim_zeros', false ) && $decimals > 0 ) {
       $price = wc_trim_zeros( $price );
     }
-
-    $formatted_price = ( $negative ? '-' : '' ) . sprintf( $price_format, '<span class="woocommerce-Price-currencySymbol">' . get_woocommerce_currency_symbol( $currency ) . '</span>', $price );
     $return          = '<iframe width="100%" src="https://'.$lRoot.'/IFRAME/'.$subC.get_woocommerce_currency().'/'.$price.$denomMode.'&NOTAG'.$del.'&WC&FONT=OPENSANS" frameborder="0" style="height:1.5em;"></iframe>';
 
     if ( $ex_tax_label && wc_tax_enabled() ) {
       $return .= ' <small class="woocommerce-Price-taxLabel tax_label">' . WC()->countries->ex_tax_or_vat() . '</small>';
     }
     
-    return apply_filters( 'fl_wc_price', $return, $price, $args, $unformatted_price );
+    return $return;
   }
   add_filter( 'wc_price', 'fl_wc_price', 10, 3 );
+  
+  function fl_get_price_html( $price, $sentThis ) {
+		if ( '' === $sentThis->get_price() ) {
+			$price = apply_filters( 'woocommerce_empty_price_html', '', $sentThis );
+		} elseif ( $sentThis->is_on_sale() ) {
+			$price = fl_wc_format_sale_price( wc_get_price_to_display( $sentThis, array( 'price' => $sentThis->get_regular_price() ) ), wc_get_price_to_display( $sentThis ) ) . $sentThis->get_price_suffix();
+		} else {
+			$price = wc_price( wc_get_price_to_display( $sentThis ),array('enabled' => true) ) . $sentThis->get_price_suffix();
+		}
+		return $price;
+	}
+  add_filter( 'woocommerce_get_price_html', 'fl_get_price_html', 10, 2 );
+  
+  
 
 }
