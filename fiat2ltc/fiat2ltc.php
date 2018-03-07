@@ -6,21 +6,21 @@
 /*
 Plugin Name: Fiat2LTC WooCommerce Prices
 Version: 0.1
-Description: This is a plugin for WooCommerce/Wordpress to display live Litecoin (and Bitcoin/Ethereum) prices in your shop.
+Description: This is a plugin for WooCommerce/Wordpress to display live Litecoin (and Bitcoin/Ethereum) prices in your shop. It will load iframes displaying live prices from fiat2ltc.com
 */
 /*
 
 */
-define( 'WP_DEBUG', true );
+define( 'WP_DEBUG', false );
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' ); 
 
 if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
-  define ('VERSION', '0.1');
+  define ('FL_VERSION', '0.1');
 
-  function version_id() {
+  function fl_version_id() {
     if ( WP_DEBUG )
       return time();
-    return VERSION;
+    return FL_VERSION;
   }
   
   $flDefaults = array(
@@ -208,7 +208,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   add_action( 'widgets_init', 'register_fl_currency_widget' );
   /*
   function register_load_fragments_script() {
-    wp_register_script( 'load-fragments-script', plugins_url( 'fiat2ltc.js', __FILE__ ), array(), version_id(), true  );
+    wp_register_script( 'load-fragments-script', plugins_url( 'fiat2ltc.js', __FILE__ ), array(), fl_version_id(), true  );
     $translation_array = array(
         'cart_hash_key' => WC()->ajax_url() . '-wc_cart_hash'
     );
@@ -322,7 +322,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		return $price;
 	}
   add_filter( 'woocommerce_get_price_html', 'fl_get_price_html', 10, 2 );
-  
   
 
 }
