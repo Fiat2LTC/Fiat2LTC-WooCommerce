@@ -1,6 +1,7 @@
 # Fiat2LTC-WooCommerce
 
 This is a plugin for WooCommerce/Wordpress to display live Litecoin (and Bitcoin/Ethereum) prices in your shop.
+It will load iframes displaying live prices from fiat2ltc.com
 
 ## Settings
 ### Denominations
