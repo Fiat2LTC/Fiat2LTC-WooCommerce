@@ -312,6 +312,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   add_filter( 'wc_price', 'fl_wc_price', 10, 3 );
   
   function fl_get_price_html( $price, $sentThis ) {
+    if (is_admin()) return $price;
 		if ( '' === $sentThis->get_price() ) {
 			$price = apply_filters( 'woocommerce_empty_price_html', '', $sentThis );
 		} elseif ( $sentThis->is_on_sale() ) {
