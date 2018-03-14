@@ -243,7 +243,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
   }
   
   function fl_wc_format_sale_price( $regular_price, $sale_price ) {
-    $price = '<del style="margin-left: .327em;">' . ( is_numeric( $regular_price ) ? wc_price( $regular_price, array('sale' => true, 'striked_price' => true, 'enabled' => true) ) : $regular_price ) . '</del><ins style="margin-left: .327em;">' . ( is_numeric( $sale_price ) ? wc_price( $sale_price, array('sale' => true, 'enabled' => true) ) : $sale_price ) . '</ins>';
+    $price = '<del style="margin-left: .327em;">' . ( is_numeric( $regular_price ) ? fl_wc_price( $regular_price, $regular_price, array('sale' => true, 'striked_price' => true, 'enabled' => true) ) : $regular_price ) . '</del><ins style="margin-left: .327em;">' . ( is_numeric( $sale_price ) ? fl_wc_price( $sale_price, $sale_price, array('sale' => true, 'enabled' => true) ) : $sale_price ) . '</ins>';
     return $price;
   }
   
@@ -262,12 +262,11 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     ) ) ) );
     
     if (!$enabled) return $wcprice;
-    
     global $flDefaults;
-    if (isset($_GET['f2l_cur']) && ( ($_GET['f2l_cur'] == "LTC") || ($_GET['f2l_cur'] == "ETH") || ($_GET['f2l_cur'] == "BTC") ) ) {
+    if ((WC()->session !== NULL) && (isset($_GET['f2l_cur']) && ( ($_GET['f2l_cur'] == "LTC") || ($_GET['f2l_cur'] == "ETH") || ($_GET['f2l_cur'] == "BTC") ) )) {
       $theCurrency = $_GET['f2l_cur'];
       WC()->session->set( 'F2L_Currency', $theCurrency );
-    } elseif (WC()->session->__isset('F2L_Currency')) {
+    } elseif ((WC()->session !== NULL) && WC()->session->__isset('F2L_Currency')) {
       $theCurrency = WC()->session->get( 'F2L_Currency', 'LTC' );
       if ( ($theCurrency != "LTC") && ($theCurrency != "ETH") & ($theCurrency != "BTC") ) $theCurrency = "LTC";
     } else {
@@ -279,7 +278,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       $subC = $theCurrency."/";
     }
     $lRoot = "fiat2ltc.com";
-    //return "[".$price."|".floatval( $negative ? $price * -1 : $price )."|".$args."|".$return."]";
 
     $unformatted_price = $price;
     $negative          = $price < 0;
@@ -297,7 +295,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
       default:
         ($flOptions['denom_ltc']) ? $denomMode = "&LITESONLY&LROUND=0" : $denomMode = "&LTCONLY&LROUND=6" ;
     }
-
     if ( apply_filters( 'woocommerce_price_trim_zeros', false ) && $decimals > 0 ) {
       $price = wc_trim_zeros( $price );
     }
@@ -309,16 +306,16 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
     
     return $return;
   }
-  add_filter( 'wc_price', 'fl_wc_price', 10, 3 );
+  //add_filter( 'wc_price', 'fl_wc_price', 10, 3 );
   
   function fl_get_price_html( $price, $sentThis ) {
     if (is_admin()) return $price;
 		if ( '' === $sentThis->get_price() ) {
 			$price = apply_filters( 'woocommerce_empty_price_html', '', $sentThis );
 		} elseif ( $sentThis->is_on_sale() ) {
-			$price = fl_wc_format_sale_price( wc_get_price_to_display( $sentThis, array( 'price' => $sentThis->get_regular_price() ) ), wc_get_price_to_display( $sentThis ) ) . $sentThis->get_price_suffix();
+			$price = fl_wc_format_sale_price( wc_get_price_to_display( $sentThis, array( 'price' => $sentThis->get_regular_price() ) ), wc_get_price_to_display( $sentThis ) );
 		} else {
-			$price = wc_price( wc_get_price_to_display( $sentThis ),array('enabled' => true) ) . $sentThis->get_price_suffix();
+			$price = fl_wc_price( $price,wc_get_price_to_display( $sentThis ),array('enabled' => true) );
 		}
 		return $price;
 	}
